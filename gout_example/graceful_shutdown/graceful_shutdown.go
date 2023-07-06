@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gout/gout"
 	"net/http"
 	"time"
@@ -11,6 +12,11 @@ func main() {
 
 	r.GET("/", func(c *gout.Context) {
 		c.String(http.StatusOK, "Hello World")
+		go func() {
+			<-gout.CloseCh
+			fmt.Println("finish")
+		}()
+
 	})
 
 	r.GET("/1", func(c *gout.Context) {

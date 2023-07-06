@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var CloseCh = make(chan struct{}, 100)
+
 // 提供给框架用户的，用来定义路由映射的处理方法,接受Context
 type HandlerFunc func(*Context)
 
@@ -119,6 +121,7 @@ func graceful_shutdown(srv *http.Server) {
 			switch signal {
 			case syscall.SIGHUP, syscall.SIGINT:
 				log.Printf("Received signal:%s\n", signal)
+				CloseCh <- struct{}{}
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				if err := srv.Shutdown(ctx); err != nil {
