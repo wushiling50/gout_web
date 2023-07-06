@@ -1,16 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"gout/gout"
 	"net/http"
-	"time"
 )
 
-func FormatAsDate(t time.Time) string {
-	year, month, day := t.Date()
-	return fmt.Sprintf("%d-%02d-%02d", year, month, day)
-}
 func main() {
 	r := gout.Default()
 	// r.Use(gout.Cors())
@@ -56,6 +50,5 @@ func main() {
 			c.String(http.StatusOK, "delete")
 		})
 	}
-
 	r.Run(":8080")
 }

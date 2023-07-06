@@ -1,9 +1,14 @@
 package gout
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 )
 
 // 提供给框架用户的，用来定义路由映射的处理方法,接受Context
@@ -78,8 +83,13 @@ func (group *RouterGroup) DELETE(pattern string, handler HandlerFunc) {
 }
 
 // 启动一个Http服务
-func (engine *Engine) Run(addr string) (err error) {
-	return http.ListenAndServe(addr, engine)
+func (engine *Engine) Run(addr string) {
+	s := &http.Server{
+		Addr:    addr,
+		Handler: engine,
+	}
+	go s.ListenAndServe()
+	graceful_shutdown(s)
 }
 
 // 添加中间件
@@ -98,4 +108,28 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	c.handlers = middlewares
 
 	engine.router.handle(c)
+}
+
+func graceful_shutdown(srv *http.Server) {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGHUP)
+	for {
+		select {
+		case signal := <-sig:
+			switch signal {
+			case syscall.SIGHUP, syscall.SIGINT:
+				log.Printf("Received signal:%s\n", signal)
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				if err := srv.Shutdown(ctx); err != nil {
+					log.Fatal("Server Shutdown:", err)
+				}
+				log.Println("exit!")
+				return
+			}
+		default:
+			time.Sleep(time.Microsecond * time.Duration(1))
+		}
+	}
+
 }
