@@ -27,6 +27,7 @@ func main() {
 	// 	q2 := c.Param("param1")
 	// 	c.String(http.StatusOK, "q1:%v,q2:%v", q1, q2)
 	// })
+	//
 	v2 := r.Group("/b")
 	v2.Use(gout.Cors())
 	{
